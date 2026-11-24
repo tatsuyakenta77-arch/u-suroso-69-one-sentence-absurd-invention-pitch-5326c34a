@@ -1,6 +1,6 @@
 // One-Sentence Absurd Invention Pitch — make.fun entry.
 //
-// The pitch is one sentence, 116 characters, naming a ridiculous
+// The pitch is one sentence, 118 characters, naming a ridiculous
 // invention that fixes a tiny everyday annoyance — raiding the
 // fridge after midnight:
 //
@@ -24,7 +24,7 @@
 // prints exactly the same pitch to stdout. No network, no
 // randomness, no environment secrets — every run produces the same
 // bytes.
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 const pitch =
@@ -52,5 +52,19 @@ if (!pitch.endsWith(".") || pitch.indexOf(".") !== pitch.length - 1) {
 const dst = join(outDir, "entry.txt");
 mkdirSync(outDir, { recursive: true });
 writeFileSync(dst, pitch, "utf8");
+
+// Read it back and verify the file holds exactly the pitch, byte
+// for byte, so a partial or corrupted write can never reach the
+// judge — and that its byte length matches the pitch's own byte
+// length (this pitch is pure ASCII, so bytes equal characters at
+// 118, but the check guards against a future edit silently adding
+// a multi-byte character).
+const written = readFileSync(dst, "utf8");
+if (written !== pitch) {
+  throw new Error("entry.txt does not hold exactly the entry pitch");
+}
+if (Buffer.byteLength(written, "utf8") !== Buffer.byteLength(pitch, "utf8")) {
+  throw new Error("entry.txt byte length does not match the entry pitch");
+}
 
 console.log(pitch);
